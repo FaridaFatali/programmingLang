@@ -1,69 +1,67 @@
 package kodlama.io.Programming.business.concretes;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import kodlama.io.Programming.business.abstracts.LanguageService;
-import kodlama.io.Programming.business.requests.LanguageRequest;
-import kodlama.io.Programming.business.responses.LanguageResponse;
+import kodlama.io.Programming.business.requests.CreateLanguageRequest;
+import kodlama.io.Programming.business.requests.UpdateLanguageRequest;
+import kodlama.io.Programming.business.responses.GetAllLanguagesResponse;
+import kodlama.io.Programming.business.responses.GetByIdLanguageResponse;
+import kodlama.io.Programming.business.rules.LanguageBusinessRules;
+import kodlama.io.Programming.core.utilities.mappers.ModelMapperService;
 import kodlama.io.Programming.dataAccess.abstracts.LanguageRepository;
 import kodlama.io.Programming.entities.concretes.Language;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-public class LanguageManager  implements LanguageService{
-private LanguageRepository languageRepository;
-    
-    @Autowired
-    public LanguageManager(LanguageRepository languageRepository){
-        this.languageRepository = languageRepository;
-    }
+@AllArgsConstructor
+public class LanguageManager implements LanguageService{
+    private LanguageRepository languageRepository;
+    private ModelMapperService modelMapperService;
+    private LanguageBusinessRules languageBusinessRules;
     
     @Override
-    public List<LanguageResponse> getAll() {
+    public List<GetAllLanguagesResponse> getAll() {
         List<Language> languages = languageRepository.findAll();
-        List<LanguageResponse> languageResponse = new ArrayList<LanguageResponse>();
+        List<GetAllLanguagesResponse> languagesResponse = languages.stream()
+                .map(language->this.modelMapperService.forResponse()
+                .map(language, GetAllLanguagesResponse.class)).collect(Collectors.toList());
         
-        for(Language language : languages){
-            LanguageResponse responseLanguage = new LanguageResponse();
-            responseLanguage.setId(language.getId());
-            responseLanguage.setName(language.getName());
-            languageResponse.add(responseLanguage);
-        }
-        return languageResponse;
+        return languagesResponse;
     }
 
     @Override
-    public void add(LanguageRequest languageRequest) {
-        Language language = new Language();
-        language.setName(languageRequest.getName());
+    public void add(CreateLanguageRequest createLanguageRequest) {
+        this.languageBusinessRules.checkIfLanguageNameExists(createLanguageRequest.getName());
+        
+        Language language = this.modelMapperService.forRequest()
+                .map(createLanguageRequest, Language.class);
         this.languageRepository.save(language);
     }
 
     @Override
     public void delete(int id) {
-        languageRepository.deleteById(id);
+        this.languageRepository.deleteById(id);
     }
 
     @Override
-    public void update(int id, LanguageRequest languageRequest) {
-        Language language = languageRepository.findById(id);
-        language.setName(languageRequest.getName());
-        languageRepository.save(language);
+    public void update(UpdateLanguageRequest updateLanguageRequest) {
+        Language language = this.modelMapperService.forRequest()
+                .map(updateLanguageRequest, Language.class);
+        
+        this.languageRepository.save(language);
     }
 
     @Override
-    public Language getById(int id) {
-        return null;
+    public GetByIdLanguageResponse getById(int id) {
+        Language language = this.languageRepository.findById(id).orElseThrow();
+        GetByIdLanguageResponse languageResponse = this.modelMapperService
+                .forResponse().map(language, GetByIdLanguageResponse.class);
+        
+        return languageResponse;
     }
 
-    @Override
-    public LanguageResponse getResponseById(int id) {
-       Language language = languageRepository.findById(id);
-       LanguageResponse languageResponse = new LanguageResponse();
-       languageRepository.findById(languageResponse.getId());
-       return languageResponse;
-    }
-    
+
 }
 

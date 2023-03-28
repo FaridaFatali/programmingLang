@@ -28,7 +28,7 @@ public class Language {
     @Column(name = "name")
     private String name;
     
-    @OneToMany(mappedBy = "language", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "language")
     private List<Technology> technologies;
     
 }

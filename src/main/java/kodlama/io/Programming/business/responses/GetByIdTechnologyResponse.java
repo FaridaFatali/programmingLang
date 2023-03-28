@@ -7,10 +7,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TechnologyResponse {
+public class GetByIdTechnologyResponse {
     private int id;
     private String name;
-    private int language_id;
-    private String language_name;
+ //   private int language_id;
+ //   private String language_name;
     
+    //
 }

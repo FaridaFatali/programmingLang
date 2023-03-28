@@ -1,51 +1,56 @@
 package kodlama.io.Programming.webApi.controllers;
 
 import java.util.List;
+import javax.validation.Valid;
 import kodlama.io.Programming.business.abstracts.TechnologyService;
-import kodlama.io.Programming.business.requests.TechnologyRequest;
-import kodlama.io.Programming.business.responses.TechnologyResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import kodlama.io.Programming.business.requests.CreateTechnologyRequest;
+import kodlama.io.Programming.business.requests.UpdateTechnologyRequest;
+import kodlama.io.Programming.business.responses.GetAllTechnologiesResponse;
+import kodlama.io.Programming.business.responses.GetByIdTechnologyResponse;
+import lombok.AllArgsConstructor;
+import org.modelmapper.ValidationException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/technologies")
+@AllArgsConstructor
 public class TechnologiesController {
     private TechnologyService technologyService;
     
-    @Autowired
-    public TechnologiesController(TechnologyService technologyService){
-        this.technologyService = technologyService;
-    }
-    
-    @GetMapping("/getall")
-    public List<TechnologyResponse> getAll(){
+    @GetMapping()
+    public List<GetAllTechnologiesResponse> getAll(){
         return technologyService.getAll();
     }
     
-    @PostMapping("/add")
-    public void add(@RequestBody TechnologyRequest technologyRequest) throws Exception{
-        this.technologyService.add(technologyRequest);
+    @GetMapping("/{id}")
+    public GetByIdTechnologyResponse getById(@PathVariable int id) throws Exception{
+        return technologyService.getById(id);
     }
     
-    @DeleteMapping("/delete")
-    public void delete(int id){
+    @PostMapping()
+    @ResponseStatus(code=HttpStatus.CREATED)
+    public void add(@RequestBody() @Valid CreateTechnologyRequest createTechnologyRequest) throws ValidationException{
+        this.technologyService.add(createTechnologyRequest);
+    }
+    
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable int id){
         this.technologyService.delete(id);
     }
     
-    @PutMapping("/update")
-    public void update(int id, TechnologyRequest technologyRequest){
-        this.technologyService.update(id, technologyRequest);
-    }
-    
-    @GetMapping("/get")
-    public TechnologyResponse getById(int id){
-        return technologyService.getResponseById(id);
+    @PutMapping()
+    public void update(@RequestBody() UpdateTechnologyRequest updateTechnologyRequest) throws DataIntegrityViolationException{
+        this.technologyService.update(updateTechnologyRequest);
     }
     
 }

@@ -1,66 +1,60 @@
 package kodlama.io.Programming.business.concretes;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import kodlama.io.Programming.business.abstracts.TechnologyService;
-import kodlama.io.Programming.business.requests.TechnologyRequest;
-import kodlama.io.Programming.business.responses.TechnologyResponse;
+import kodlama.io.Programming.business.requests.CreateTechnologyRequest;
+import kodlama.io.Programming.business.requests.UpdateTechnologyRequest;
+import kodlama.io.Programming.business.responses.GetAllTechnologiesResponse;
+import kodlama.io.Programming.business.responses.GetByIdTechnologyResponse;
+import kodlama.io.Programming.core.utilities.mappers.ModelMapperService;
 import kodlama.io.Programming.dataAccess.abstracts.TechnologyRepository;
 import kodlama.io.Programming.entities.concretes.Technology;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@AllArgsConstructor
 public class TechnologyManager  implements TechnologyService{
     private TechnologyRepository technologyRepository;
-    
-    @Autowired
-    public TechnologyManager(TechnologyRepository technologyRepository){
-        this.technologyRepository = technologyRepository;
-    }
+    private ModelMapperService modelMapperService;
     
     @Override
-    public List<TechnologyResponse> getAll() {
+    public List<GetAllTechnologiesResponse> getAll() {
         List<Technology> technologies = technologyRepository.findAll();
-        List<TechnologyResponse> technologyResponse = new ArrayList<TechnologyResponse>();
+        List<GetAllTechnologiesResponse> technologiesResponse = technologies.stream()
+                .map(technology->this.modelMapperService.forResponse()
+                .map(technology, GetAllTechnologiesResponse.class)).collect(Collectors.toList());
         
-        for(Technology technology : technologies){
-            TechnologyResponse responseTechnology = new TechnologyResponse();
-            responseTechnology.setId(technology.getId());
-            responseTechnology.setName(technology.getName());
-            technologyResponse.add(responseTechnology);
-        }
-        return technologyResponse;
+        return technologiesResponse;
     }
 
     @Override
-    public void add(TechnologyRequest technologyRequest) {
-        Technology technology = new Technology();
-        technology.setName(technologyRequest.getName());
+    public void add(CreateTechnologyRequest createTechnologyRequest) {
+        Technology technology = this.modelMapperService.forRequest()
+                .map(createTechnologyRequest, Technology.class);
         this.technologyRepository.save(technology);
     }
-    
+
     @Override
     public void delete(int id) {
-        technologyRepository.deleteById(id);
+        this.technologyRepository.deleteById(id);
     }
 
     @Override
-    public void update(int id, TechnologyRequest technologyRequest) {
-        Technology technology = technologyRepository.findById(id);
-        technology.setName(technologyRequest.getName());
-        technologyRepository.save(technology);
-    }
-
-    public Technology getById(int id) {
-        return null;
+    public void update(UpdateTechnologyRequest updateTechnologyRequest) {
+        Technology technology = this.modelMapperService.forRequest()
+                .map(updateTechnologyRequest, Technology.class);
+        
+        this.technologyRepository.save(technology);
     }
 
     @Override
-    public TechnologyResponse getResponseById(int id) {
-       Technology technology = technologyRepository.findById(id);
-       TechnologyResponse technologyResponse = new TechnologyResponse();
-       technologyRepository.findById(technologyResponse.getId());
-       return technologyResponse;
+    public GetByIdTechnologyResponse getById(int id){
+        Technology technology = this.technologyRepository.findById(id);
+        GetByIdTechnologyResponse technologyResponse = this.modelMapperService
+                .forResponse().map(technology, GetByIdTechnologyResponse.class);
+        
+        return technologyResponse;
     }
 }
